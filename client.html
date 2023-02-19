@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+
+<script>
+	$(document).ready(function() {
+		$.get("/client/cfg", function(data) {
+			const result = data.split("\n");
+			$("#MqttBroker").val(result[0]);
+		
+		})
+	})
+
+</script>
+
+
+</head>
+
+
+<body>
+	<h2>Config MQTT Client</h2>
+	<form action="	" method="post">
+		<div class="container">
+			<br>
+			<label for="MqttBroker">Url Mqtt Broker</label>
+			<br>
+			<input type="text" placeholder="MqttBroker" name="MqttBroker" id="MqttBroker" value="MqttBroker"
+				size="20">
+			<br>
+			<button type="submit">Save</button>
+		</div>
+	</form>
+
+	
+
+</body>
+</html>
