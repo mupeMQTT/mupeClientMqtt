@@ -1,4 +1,5 @@
 #include "mupeClientMqttWeb.h"
+#include "mupeClientMqttNvs.h"
 #include "mupeWeb.h"
 #include "mupeMdnsNtp.h"
 #include "esp_http_server.h"
@@ -17,9 +18,8 @@ esp_err_t client_get_handler(httpd_req_t *req) {
 	httpd_resp_send(req, (const char*) modbus_index_start, mqtt_index_size);
 	return ESP_OK;
 }
+
 esp_err_t root_client_post_handler(httpd_req_t *req) {
-
-
 
 	ESP_LOGI(TAG, "root_post_handler req->uri=[%s]", req->uri);
 	ESP_LOGI(TAG, "root_post_handler content length %d", req->content_len);
@@ -41,6 +41,17 @@ esp_err_t root_client_post_handler(httpd_req_t *req) {
 	}
 	buf[off] = '\0';
 	ESP_LOGI(TAG, "root_post_handler buf=[%s]", buf);
+	char value[30];
+
+	if (find_value("MqttBroker=", buf, value) > 0) {
+		char search[] = "%2F";
+		char replace[] = "/";
+		stringReplace(search, replace, value);
+		 strcpy(search , "%3A");
+		 strcpy(replace, ":");
+		stringReplace(search, replace, value);
+		mqttBrokerSet(value);
+	}
 
 
 	return client_get_handler(req);
@@ -49,10 +60,13 @@ esp_err_t root_client_post_handler(httpd_req_t *req) {
 
 
 esp_err_t client_get_cfg(httpd_req_t *req) {
-	ESP_LOGI(TAG, "modbus_get_cfg %s ", req->uri);
+	ESP_LOGI(TAG, "client_get_cfg %s ", req->uri);
 
-	char value[50];
+	char value[mqttBrokerGetSize()];
 	httpd_resp_set_type(req, "text/html");
+	mqttBrokerGet(value);
+
+	httpd_resp_send_chunk(req,value, strlen(value));
 
 	httpd_resp_send_chunk(req, NULL, 0);
 	return ESP_OK;
