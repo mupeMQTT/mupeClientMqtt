@@ -3,10 +3,12 @@
 #include "mupeMdnsNtp.h"
 #include "mupeClientMqttWeb.h"
 #include "esp_log.h"
+#include <esp_system.h>
 #include "mqtt_client.h"
 #include "mupeClientMqttNvs.h"
+#include "mupeDataBase.h"
 
-static const char *TAG = "MQTT_EXAMPLE";
+static const char *TAG = "mupeClientMQTT";
 
 static void log_error_if_nonzero(const char *message, int error_code) {
 	if (error_code != 0) {
@@ -32,7 +34,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 	switch ((esp_mqtt_event_id_t) event_id) {
 	case MQTT_EVENT_CONNECTED:
 		ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-
+		msg_id = esp_mqtt_client_subscribe(client, "#", 0);
+		ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 		break;
 	case MQTT_EVENT_DISCONNECTED:
 		ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -50,8 +53,18 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 		break;
 	case MQTT_EVENT_DATA:
 		ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+
 		printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
 		printf("DATA=%.*s\r\n", event->data_len, event->data);
+		if (event->data_len > 0) {
+			char topic[event->topic_len + 1];
+			strncpy(topic, event->topic, event->topic_len);
+			topic[event->topic_len] = '\0';
+			mqttDataBaseStore(topic, event->data, event->data_len, "leistung");
+			mqttDataBaseGetSize(1678010875,1678019919,topic,"leistung");
+
+
+		}
 		break;
 	case MQTT_EVENT_ERROR:
 		ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -76,14 +89,14 @@ esp_mqtt_client_handle_t client = NULL;
 
 void mupeClientMqttInit(void) {
 	mupeClientWebInit();
-	char* adr=malloc(mqttBrokerGetSize());
+	char *adr = malloc(mqttBrokerGetSize());
 	mqttBrokerGet(adr);
 
 	esp_mqtt_client_config_t mqtt_cfg = { .broker.address.uri = adr, };
 	client = esp_mqtt_client_init(&mqtt_cfg);
 	/* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
 	esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler,
-			NULL);
+	NULL);
 	esp_mqtt_client_start(client);
 }
 
