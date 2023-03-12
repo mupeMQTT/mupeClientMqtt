@@ -21,10 +21,15 @@
 
 #include "nvs_flash.h"
 #include "mupeClientMqttNvs.h"
+#include "esp_log.h"
+
+
 
 #define NAMESPACE_NAME "ClientCfg"
+static const char *TAG = "mupeClientMqttNvs";
 
 void mupeClientNvsInit(void) {
+	ESP_LOGI(TAG, "mupeClientNvsInit");
 	esp_err_t err = nvs_flash_init();
 	if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
 		ESP_ERROR_CHECK(nvs_flash_erase());
@@ -33,6 +38,7 @@ void mupeClientNvsInit(void) {
 }
 
 void mqttBrokerSet(char * mqttBroker){
+	ESP_LOGI(TAG, "mqttBrokerSet");
 	nvs_handle_t my_handle;
 	nvs_open(NAMESPACE_NAME, NVS_READWRITE, &my_handle);
 	nvs_set_str(my_handle, "MqttBroker", mqttBroker);
@@ -41,16 +47,19 @@ void mqttBrokerSet(char * mqttBroker){
 }
 
 size_t mqttBrokerGetSize(){
+
 	nvs_handle_t my_handle;
 	size_t strSize = 0;
 	nvs_open(NAMESPACE_NAME, NVS_READWRITE, &my_handle);
 	nvs_get_str(my_handle, "MqttBroker", NULL, &strSize);
 	nvs_commit(my_handle);
 	nvs_close(my_handle);
+	ESP_LOGI(TAG, "mqttBrokerGetSize %u",strSize);
 	return strSize;
 }
 
 void mqttBrokerGet(char *mqttBroker) {
+	ESP_LOGI(TAG, "mqttBrokerGetSize %s",mqttBroker);
 	nvs_handle_t my_handle;
 	size_t strSize = 0;
 	nvs_open(NAMESPACE_NAME, NVS_READWRITE, &my_handle);

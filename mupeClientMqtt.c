@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include "mupeClientMqtt.h"
-#include "mupeMdnsNtp.h"
+#include "mupeClientMqttNvs.h"
 #include "mupeClientMqttWeb.h"
+
 #include "esp_log.h"
 #include <esp_system.h>
-#include "mqtt_client.h"
-#include "mupeClientMqttNvs.h"
-#include "mupeDataBase.h"
 
 static const char *TAG = "mupeClientMQTT";
 
@@ -27,7 +25,7 @@ static void log_error_if_nonzero(const char *message, int error_code) {
  */
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 		int32_t event_id, void *event_data) {
-	//  ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%l", base, event_id);
+	//  ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%l", base, event_id);
 	esp_mqtt_event_handle_t event = event_data;
 	esp_mqtt_client_handle_t client = event->client;
 	int msg_id;
@@ -54,17 +52,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 	case MQTT_EVENT_DATA:
 		ESP_LOGI(TAG, "MQTT_EVENT_DATA");
 
-		printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-		printf("DATA=%.*s\r\n", event->data_len, event->data);
-		if (event->data_len > 0) {
-			char topic[event->topic_len + 1];
-			strncpy(topic, event->topic, event->topic_len);
-			topic[event->topic_len] = '\0';
-			mqttDataBaseStore(topic, event->data, event->data_len, "leistung");
-			mqttDataBaseGetSize(1678010875,1678019919,topic,"leistung");
-
-
-		}
 		break;
 	case MQTT_EVENT_ERROR:
 		ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -88,6 +75,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
 esp_mqtt_client_handle_t client = NULL;
 
 void mupeClientMqttInit(void) {
+	ESP_LOGI(TAG, "mupeClientMqttInit");
 	mupeClientWebInit();
 	char *adr = malloc(mqttBrokerGetSize());
 	mqttBrokerGet(adr);
@@ -97,10 +85,16 @@ void mupeClientMqttInit(void) {
 	/* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
 	esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler,
 	NULL);
+
 	esp_mqtt_client_start(client);
 }
 
 void mupeClientSend(char *topic, char *msg) {
+	ESP_LOGI(TAG, "mupeClientSend %s %s", topic, msg);
 	esp_mqtt_client_publish(client, topic, msg, 0, 0, 0);
+}
+
+esp_mqtt_client_handle_t get_esp_mqtt_client_handle_t() {
+	return client;
 }
 
