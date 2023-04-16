@@ -42,12 +42,6 @@ esp_err_t root_client_post_handler(httpd_req_t *req) {
 	char value[30];
 
 	if (find_value("MqttBroker=", buf, value) > 0) {
-		char search[] = "%2F";
-		char replace[] = "/";
-		stringReplace(search, replace, value);
-		strcpy(search, "%3A");
-		strcpy(replace, ":");
-		stringReplace(search, replace, value);
 		mqttBrokerSet(value);
 	}
 

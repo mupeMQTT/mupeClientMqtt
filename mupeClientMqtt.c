@@ -77,16 +77,18 @@ esp_mqtt_client_handle_t client = NULL;
 void mupeClientMqttInit(void) {
 	ESP_LOGI(TAG, "mupeClientMqttInit");
 	mupeClientWebInit();
-	char *adr = malloc(mqttBrokerGetSize());
-	mqttBrokerGet(adr);
+	size_t size = mqttBrokerGetSize();
+	if (size > 0) {
+		char *adr = malloc(size);
+		mqttBrokerGet(adr);
 
-	esp_mqtt_client_config_t mqtt_cfg = { .broker.address.uri = adr, };
-	client = esp_mqtt_client_init(&mqtt_cfg);
-	/* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
-	esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler,
-	NULL);
-
-	esp_mqtt_client_start(client);
+		esp_mqtt_client_config_t mqtt_cfg = { .broker.address.uri = adr, };
+		client = esp_mqtt_client_init(&mqtt_cfg);
+		/* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
+		esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID,
+				mqtt_event_handler, NULL);
+		esp_mqtt_client_start(client);
+	}
 }
 
 void mupeClientSend(char *topic, char *msg) {
